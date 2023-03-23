@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: p-core
+  namespace: sesame
+spec:
+  rules:
+    - host: internal-dev.se-same.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: p-core
+                port:
+                  number: 80

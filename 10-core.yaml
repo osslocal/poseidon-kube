@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: p-core
+  namespace: sesame
+automountServiceAccountToken: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: p-core
+  namespace: sesame
+data:
+  DSN: "postgres://postgres:UlVGJE0atVb9KGazy2JcGZ8l@localhost:25432/startup"
+  NODE_ENV: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p-core
+  namespace: sesame
+spec:
+  selector:
+    app: p-core
+  ports:
+    - port: 80
+      protocol: TCP
+      name: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p-core
+  namespace: sesame
+spec:
+  selector:
+    matchLabels:
+      app: p-core
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: p-core
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: p-core
+          image: docker.io/0x61c88647/poseidon-core:latest
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 60m
+          envFrom:
+            - configMapRef:
+                name: p-core
+          ports:
+            - containerPort: 80
+              protocol: TCP
+      securityContext:
+        fsGroup: 1000
+      serviceAccountName: p-core
