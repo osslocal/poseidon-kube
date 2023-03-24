@@ -14,19 +14,6 @@ data:
   DSN: "postgres://postgres:UlVGJE0atVb9KGazy2JcGZ8l@localhost:25432/startup"
   NODE_ENV: "production"
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: p-core
-  namespace: sesame
-spec:
-  selector:
-    app: p-core
-  ports:
-    - port: 80
-      protocol: TCP
-      name: default
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -55,14 +42,29 @@ spec:
             runAsNonRoot: true
           resources:
             requests:
-              memory: 1Gi
+              memory: 128Mi
               cpu: 60m
           envFrom:
             - configMapRef:
                 name: p-core
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 80
               protocol: TCP
       securityContext:
         fsGroup: 1000
       serviceAccountName: p-core
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p-core
+  namespace: sesame
+spec:
+  selector:
+    app: p-core
+  ports:
+    - name: default
+      port: 80
+      targetPort: http
+      protocol: TCP
